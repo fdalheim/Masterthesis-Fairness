@@ -257,7 +257,7 @@ print(rate_white - rate_black)
 y_test = y_test.to_numpy()
 group_test = group_test.to_numpy()
 
-# Equality of opportunity (versus Equalized odds) this is just predictive parity, no?
+# Equality of opportunity (versus Equalized odds)
 white_tpr = np.mean(y_hat_class[(y_test == 1) & (group_test == 1)])
 black_tpr = np.mean(y_hat_class[(y_test == 1) & (group_test == 2)])
 print(white_tpr - black_tpr)
@@ -265,3 +265,4 @@ print(white_tpr - black_tpr)
 # Post-processing: Fairness intervention Hardt et al. (2016)
 
 # Set a seed for Neural Network to get similar results
+# change minimal example to Equal Opportunity = False negative error balance?
