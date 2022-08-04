@@ -41,6 +41,9 @@ dataset = pd.DataFrame(features, columns=variable_names)
 label = pd.DataFrame(label, columns=['ESR'])
 label = label.astype(int)
 
+# one-hot encoding drops first column, so make sure "white" is saved in group_frame. Should no longer be necessary
+group = pd.DataFrame(group, columns=['race'])
+
 # remove 'RELP' from dataframe as interpretation is not clear and too many categories
 dataset = dataset.drop(['RELP'], axis=1)
 
@@ -150,10 +153,6 @@ for key in category_dict:
 dummies = ['SEX', 'DIS', 'NATIVITY', 'DEAR', 'DEYE', 'DREM']
 dataset[dummies] = np.where(dataset[dummies] == 2, 0, 1)
 
-# one-hot encoding drops first column, so make sure "white" is saved in group_frame. Should no longer be necessary
-group = pd.DataFrame(group, columns=['race'])
-# should probably check whether they are equal. (They are not for some reason)
-
 # list that includes all categorical variables
 categorical_variables = ['SCHL', 'MAR', 'ESP', 'MIG', 'CIT', 'MIL', 'ANC', 'RAC1P', ]
 
@@ -242,19 +241,27 @@ y_hat_class = np.round(y_hat)
 
 # get accuracy
 correct = (y_hat_class == y_test)
-accuracy = np.count_nonzero(correct) / len(correct) # / 30264
+accuracy = np.count_nonzero(correct) / len(correct)  # / 30264
 print(accuracy)
 
-# Demographic Parity: initial unfairness is roughly 10 percent
-employ_rate_white = (np.mean(y_hat_class[group_test == 1]))
-employ_rate_black = (np.mean(y_hat_class[group_test == 2]))
-inequality = employ_rate_white - employ_rate_black
-print(inequality)
-
-# Show accuracy per group
+# Rate of acceptance per class
 for i in range(1, 10):
     print(np.mean(y_hat_class[group_test == i]))
 
+# Demographic Parity: initial unfairness is roughly 10 percent
+rate_white = (np.mean(y_hat_class[group_test == 1]))
+rate_black = (np.mean(y_hat_class[group_test == 2]))
+print(rate_white - rate_black)
+
+# change to ndarray for comparison
+y_test = y_test.to_numpy()
+group_test = group_test.to_numpy()
+
+# Equality of opportunity (versus Equalized odds) this is just predictive parity, no?
+white_tpr = np.mean(y_hat_class[(y_test == 1) & (group_test == 1)])
+black_tpr = np.mean(y_hat_class[(y_test == 1) & (group_test == 2)])
+print(white_tpr - black_tpr)
+
 # Post-processing: Fairness intervention Hardt et al. (2016)
 
-# Set a seed so the code is reproducible.
+# Set a seed for Neural Network to get similar results
