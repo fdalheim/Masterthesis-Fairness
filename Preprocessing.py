@@ -156,7 +156,7 @@ dataset[dummies] = np.where(dataset[dummies] == 2, 0, 1)
 # list that includes all categorical variables
 categorical_variables = ['SCHL', 'MAR', 'ESP', 'MIG', 'CIT', 'MIL', 'ANC', 'RAC1P', ]
 
-# Onehot-encoding, first value is dropped. Not sure if best solution
+# Onehot-encoding, one column is dropped.
 dataset = pd.get_dummies(dataset, columns=categorical_variables, prefix=categorical_variables, drop_first=True)
 
 # split into training and test set (80:20 or 90:10?). Could split training set again to get a validation set
@@ -166,7 +166,7 @@ X_train, X_test, y_train, y_test, group_train, group_test = train_test_split(dat
 X_train, X_val, y_train, y_val, group_train, group_val = train_test_split(X_train, y_train, group_train,
                                                                           test_size=1/9, random_state=42)
 
-# Scaling of Features / Manually, so it remains df
+# Scaling of Features / Manually, use train values to avoid leakage
 max_ = X_train.max(axis=0)
 min_ = X_train.min(axis=0)
 
@@ -174,10 +174,10 @@ X_train = (X_train - min_) / (max_ - min_)
 X_val = (X_val - min_) / (max_ - min_)
 X_test = (X_test - min_) / (max_ - min_)
 
-# save number of columns for input shape
+# save number of variables for input shape
 num_features = [X_train.shape[1]]
 
-# Logistic Regression Benchmark, Accuracy = 0.7216
+# Logistic Regression Benchmark, Accuracy = 0.7212
 model = LogisticRegression(max_iter=1000)
 model.fit(X_train, y_train.values.ravel())
 predictions = model.predict(X_test)
@@ -239,7 +239,7 @@ y_hat = model.predict(X_test)
 # round to get classes
 y_hat_class = np.round(y_hat)
 
-# get accuracy
+# get accuracy ~0.76xx
 correct = (y_hat_class == y_test)
 accuracy = np.count_nonzero(correct) / len(correct)  # / 30264
 print(accuracy)
@@ -262,6 +262,16 @@ white_tpr = np.mean(y_hat_class[(y_test == 1) & (group_test == 1)])
 black_tpr = np.mean(y_hat_class[(y_test == 1) & (group_test == 2)])
 print(white_tpr - black_tpr)
 
+
+# Demographic Parity between Men and Women (überarbeiten)
+rate_men = np.mean(y_hat_class[X_test['SEX'] == 1])
+rate_women = np.mean(y_hat_class[X_test['SEX'] == 0])
+print(rate_men - rate_women)
+
+# Equal opportunity between Men and Women (überarbeiten)
+men_tpr = np.mean(y_hat_class[(y_test == 1) & (X_test['SEX'] == 1)])
+women_tpr = np.mean(y_hat_class[(y_test == 1) & (X_test['SEX'] == 0)])
+print(men_tpr - women_tpr)
 # Post-processing: Fairness intervention Hardt et al. (2016)
 
 # Set a seed for Neural Network to get similar results
