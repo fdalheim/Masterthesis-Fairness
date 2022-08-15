@@ -149,12 +149,12 @@ category_dict = {
 for key in category_dict:
     dataset[key] = dataset[key].map(category_dict[key])
 
-# change race into binary variable (white = 0, non-white = 1)
-#dataset['RAC1P'] = np.where(dataset['RAC1P'] == 'White alone', 0, 1)
-
 # Change coding for binary variables, so 0 = 'No', 1 = 'YES'
 dummies = ['SEX', 'DIS', 'NATIVITY', 'DEAR', 'DEYE', 'DREM']
 dataset[dummies] = np.where(dataset[dummies] == 2, 0, 1)
+
+# drop gender from the training set
+gender = dataset.pop('SEX')
 
 # list that includes all categorical variables
 categorical_variables = ['SCHL', 'MAR', 'ESP', 'MIG', 'CIT', 'MIL', 'ANC', 'RAC1P']
@@ -163,11 +163,11 @@ categorical_variables = ['SCHL', 'MAR', 'ESP', 'MIG', 'CIT', 'MIL', 'ANC', 'RAC1
 dataset = pd.get_dummies(dataset, columns=categorical_variables, prefix=categorical_variables, drop_first=True)
 
 # split into training and test set (80:20 or 90:10?). Could split training set again to get a validation set
-X_train, X_test, y_train, y_test, group_train, group_test = train_test_split(dataset, label, group,
-                                                                             test_size=0.1, random_state=42)
+X_train, X_test, y_train, y_test, gender_train, gender_test = train_test_split(dataset, label, gender,
+                                                                               test_size=0.1, random_state=42)
 # split one more time get 3 different sets. 1/9 to get (80:10:10 split) Train, Validation and Test
-X_train, X_val, y_train, y_val, group_train, group_val = train_test_split(X_train, y_train, group_train,
-                                                                          test_size=1/9, random_state=42)
+X_train, X_val, y_train, y_val, gender_train, gender_val = train_test_split(X_train, y_train, gender_train,
+                                                                            test_size=1 / 9, random_state=42)
 
 # Scaling of Features / Manually, use train values to avoid leakage
 max_ = X_train.max(axis=0)
@@ -180,7 +180,7 @@ X_test = (X_test - min_) / (max_ - min_)
 # save number of variables for input shape
 num_features = [X_train.shape[1]]
 
-# Logistic Regression Benchmark, Accuracy = 0.7216
+# Blind Logistic Regression Benchmark, Accuracy = 0.7201
 model = LogisticRegression(max_iter=1000)
 model.fit(X_train, y_train.values.ravel())
 predictions = model.predict(X_test)
@@ -189,8 +189,13 @@ print(score_log)
 
 # Neural Network
 # Define model design
+import tensorflow as tf
 from tensorflow import keras
 from keras import layers
+
+# Ensure reproducible results
+np.random.seed(1)
+tf.random.set_seed(1)
 
 model = keras.Sequential([
     layers.Dense(input_shape=num_features, units=16, activation='relu'),
@@ -229,7 +234,7 @@ history_df = pd.DataFrame(history.history)
 history_df.loc[:, ['loss', 'val_loss']].plot(title="Cross-entropy")
 history_df.loc[:, ['binary_accuracy', 'val_binary_accuracy']].plot(title="Accuracy")
 
-# Evaluate the model on train and test set Accuracy = 0.76... . 4% increase, similar increase in paper when using GBM.
+# Evaluate the model on train and test set
 # The accuracy is better on the test set than on the training set since we randomly drop out 30% of the nodes in the
 # training phase (regularization)
 model.summary()
@@ -242,60 +247,14 @@ y_hat = model.predict(X_test)
 # round to get classes
 y_hat_class = np.round(y_hat)
 
-# get accuracy ~0.76xx
+# Accuracy blind model
 correct = (y_hat_class == y_test)
 accuracy = np.count_nonzero(correct) / len(correct)  # / 30264
 print(accuracy)
 
-# Rate of acceptance per class
-for id_race, race in category_dict['RAC1P'].items():
-    print(race)
-    print(np.mean(y_hat_class[group_test == id_race]))
-
-# Demographic Parity: initial unfairness is roughly 10 percent
-rate_white = (np.mean(y_hat_class[group_test == 1]))
-rate_black = (np.mean(y_hat_class[group_test == 2]))
-print(rate_white - rate_black)
-
-# change to ndarray for comparison
-y_test = y_test.to_numpy()
-group_test = group_test.to_numpy()
-
-# Equality of opportunity (versus Equalized odds)
-white_tpr = np.mean(y_hat_class[(y_test == 1) & (group_test == 1)])
-black_tpr = np.mean(y_hat_class[(y_test == 1) & (group_test != 1)])
-print(white_tpr - black_tpr)
-
-# change threshold value
-x_axis = list(np.linspace(0, 0.2, 20))
-Fairness = []
-Accuracies = []
-for i in x_axis:
-    y_hat_class[group_test == 1] = np.round()
-    y_hat_class[group_test == 2] = np.where(y_hat >= 0.5 - i, 1, 0)
-
-    rate_white = np.mean(y_hat_class[group_test == 1])
-    rate_black = (np.mean(y_hat_class[group_test == 2]))
-    Fairness.append(rate_white - rate_black)
-
-    correct = (y_hat_class == y_test)
-    accuracy = np.count_nonzero(correct) / len(correct)  # / 30264
-    Accuracies.append(accuracy)
-
-    if rate_white < rate_black:
-        break
-
-
-#
-#
-#
-#
-#
-#
-
-# Demographic Parity between Men and Women (überarbeiten)
-rate_men = np.mean(y_hat_class[X_test['SEX'] == 1])
-rate_women = np.mean(y_hat_class[X_test['SEX'] == 0])
+# Demographic Parity between Men and Women
+rate_men = np.mean(y_hat_class[(gender_test == 1)])
+rate_women = np.mean(y_hat_class[gender_test == 0])
 print(rate_men - rate_women)
 
 # change threshold value
@@ -303,11 +262,11 @@ x_axis = list(np.linspace(0, 0.1, 1001))
 Fairness = []
 Accuracies = []
 for i in x_axis:
-    y_hat_class[X_test['SEX'] == 1] = np.round(y_hat[X_test['SEX'] == 1])
-    y_hat_class[X_test['SEX'] == 0] = np.where(y_hat[X_test['SEX'] == 0] >= 0.5 - i, 1, 0)
+    y_hat_class[gender_test == 1] = np.round(y_hat[gender_test == 1])
+    y_hat_class[gender_test == 0] = np.where(y_hat[gender_test == 0] >= 0.5 - i, 1, 0)
 
-    rate_male = np.mean(y_hat_class[X_test['SEX'] == 1])
-    rate_female = (np.mean(y_hat_class[X_test['SEX'] == 0]))
+    rate_male = np.mean(y_hat_class[gender_test == 1])
+    rate_female = (np.mean(y_hat_class[gender_test == 0]))
     Fairness.append(rate_male - rate_female)
 
     correct = (y_hat_class == y_test)
@@ -324,23 +283,19 @@ fig, ax = plt.subplots(nrows=1, ncols=2)
 ax[0].plot(x_axis[:len(Accuracies)], Accuracies)
 ax[1].plot(x_axis[:len(Fairness)], Fairness)
 
+# Accuracy Values
+print(f"Initial Accuracy: {Accuracies[0]}")
+print(f"Accuracy after Invention: {Accuracies[-1]}")
+accuracy_loss = Accuracies[0] - Accuracies[-1]
+print(f"Loss in Accuracy: {accuracy_loss}")
 
-# Values
-print(f"Initial Accuracy: {Accuracies[0]}")  # Accuracy start 0.76318
-print(f"Accuracy after Invention: {Accuracies[-1]}")  # Accuracy end 0.7599
+print()
 
-print(f"Initial Unfairness: {Fairness[0]}")  # (Un-)Fairness start 0.06425
-print(f"Unfairness after intervention: {Fairness[-1]}")  # (Un-)Fairness end -0.001
-
+# Fairness Values
+print(f"Initial Unfairness: {Fairness[0]}")
+print(f"Unfairness after intervention: {Fairness[-1]}")
+fairness_gain = Fairness[0] - Fairness[-1]
+print(f"Gain in Fairness: {fairness_gain}")
 print(f"Necessary intervention: {x_axis[len(Accuracies)-1]}")
-###
 
-# Equal opportunity between Men and Women (überarbeiten)
-# men_tpr = np.mean(y_hat_class[(y_test == 1) & (X_test['SEX'] == 1)])
-# women_tpr = np.mean(y_hat_class[(y_test == 1) & (X_test['SEX'] == 0)])
-# print(men_tpr - women_tpr)
-# Post-processing: Fairness intervention Hardt et al. (2016)
-
-
-# Set a seed for Neural Network to get similar results
-# change minimal example to Equal Opportunity = False negative error balance?
+# results differ only slighty. Aware has more accuracy with equal fairness
