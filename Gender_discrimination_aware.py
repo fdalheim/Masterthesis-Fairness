@@ -8,9 +8,12 @@ import matplotlib.pyplot as plt
 plt.style.use('seaborn-whitegrid')
 # Set Matplotlib defaults
 plt.rc('figure', autolayout=True)
-plt.rc('axes', labelweight='bold', labelsize='large',
+plt.rc('axes', labelweight='bold', labelsize='xx-large',
        titleweight='bold', titlesize=18, titlepad=10)
 plt.rc('animation', html='html5')
+plt.rc('lines', linewidth='2')
+plt.rc('xtick', labelsize=15)
+plt.rc('ytick', labelsize=15)
 
 data_source = ACSDataSource(survey_year='2018', horizon='1-Year', survey='person')
 acs_data = data_source.get_data(states=["CA"], download=True)
@@ -41,7 +44,7 @@ dataset = pd.DataFrame(features, columns=variable_names)
 label = pd.DataFrame(label, columns=['ESR'])
 label = label.astype(int)
 
-# one-hot encoding drops first column, so make sure "white" is saved in group_frame. Should no longer be necessary
+# one-hot encoding drops first column, so make sure "white" is saved in group_frame.
 group = pd.DataFrame(group, columns=['race'])
 
 # remove 'RELP' from dataframe as interpretation is not clear and too many categories
@@ -164,7 +167,7 @@ X_train, X_test, y_train, y_test, group_train, group_test = train_test_split(dat
                                                                              test_size=0.1, random_state=42)
 # split one more time get 3 different sets. 1/9 to get (80:10:10 split) Train, Validation and Test
 X_train, X_val, y_train, y_val, group_train, group_val = train_test_split(X_train, y_train, group_train,
-                                                                          test_size=1/9, random_state=42)
+                                                                          test_size=1 / 9, random_state=42)
 
 # Scaling of Features / Manually, use train values to avoid leakage
 max_ = X_train.max(axis=0)
@@ -278,7 +281,9 @@ for i in x_axis:
 fig, ax = plt.subplots(nrows=1, ncols=2)
 
 ax[0].plot(x_axis[:len(Accuracies)], Accuracies)
+ax[0].set(xlabel='Intervention', ylabel='Accuracy')
 ax[1].plot(x_axis[:len(Fairness)], Fairness)
+ax[1].set(xlabel='Intervention', ylabel='Unfairness')
 
 # Accuracy Values
 print(f"Initial Accuracy: {Accuracies[0]}")
@@ -293,4 +298,4 @@ print(f"Initial Unfairness: {Fairness[0]}")
 print(f"Unfairness after intervention: {Fairness[-1]}")
 fairness_gain = Fairness[0] - Fairness[-1]
 print(f"Gain in Fairness: {fairness_gain}")
-print(f"Necessary intervention: {x_axis[len(Accuracies)-1]}")
+print(f"Necessary intervention: {x_axis[len(Accuracies) - 1]}")
