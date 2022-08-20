@@ -8,9 +8,12 @@ import matplotlib.pyplot as plt
 plt.style.use('seaborn-whitegrid')
 # Set Matplotlib defaults
 plt.rc('figure', autolayout=True)
-plt.rc('axes', labelweight='bold', labelsize='large',
+plt.rc('axes', labelweight='bold', labelsize='xx-large',
        titleweight='bold', titlesize=18, titlepad=10)
 plt.rc('animation', html='html5')
+plt.rc('lines', linewidth='2')
+plt.rc('xtick', labelsize=15)
+plt.rc('ytick', labelsize=15)
 
 data_source = ACSDataSource(survey_year='2018', horizon='1-Year', survey='person')
 acs_data = data_source.get_data(states=["CA"], download=True)
@@ -187,6 +190,14 @@ predictions = model.predict(X_test)
 score_log = model.score(X_test, y_test)
 print(score_log)
 
+# Trying to predict gender using remaining features, Accuracy = 0.5921 --> Features are not very predictive of the
+# sensitive attribute
+model_sensitive = LogisticRegression(max_iter=1000)
+model_sensitive.fit(X_train, gender_train)
+predictions_gender = model.predict(X_test)
+score_log_gender = model.score(X_test, gender_test)
+print(score_log_gender)
+
 # Neural Network
 # Define model design
 import tensorflow as tf
@@ -281,7 +292,9 @@ for i in x_axis:
 fig, ax = plt.subplots(nrows=1, ncols=2)
 
 ax[0].plot(x_axis[:len(Accuracies)], Accuracies)
+ax[0].set(xlabel='Intervention', ylabel='Accuracy')
 ax[1].plot(x_axis[:len(Fairness)], Fairness)
+ax[1].set(xlabel='Intervention', ylabel='Unfairness')
 
 # Accuracy Values
 print(f"Initial Accuracy: {Accuracies[0]}")
