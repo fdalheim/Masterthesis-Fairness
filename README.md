@@ -1,4 +1,4 @@
-# Masterthesis-Fairness
+# Master Thesis
 This is the repository to my master thesis called "Evaluating Tradeoffs Between Algorithmic Accuracy and Fairness"
 supervised by the chair of Public and Behavioral Economics at Johannes Gutenberg University Mainz. The thesis' summary
 as well as the main findings can be found in the following. The figures can be reproduced using the two python files
@@ -32,7 +32,7 @@ protect minorities from algorithmic discrimination, the legislation should not b
 
 ## Results 
 ### Fairness and Accuracy Using The Gender Aware Model
-![Fairness and Accuracy Using The Gender Aware Model](img.png)
+![Fairness and Accuracy Using The Gender Aware Model](Fairness and Accuracy Aware Model.png)
 Notes: The x value "Intervention" measures the difference in threshold values. For example, a value of
 0.010 means that the probability of men being employed has to exceed 0.5 in order for them to be classified as positive,
 while the necessary threshold value is lowered to 0.40 for female observations. By continuously lowering the threshold
@@ -44,7 +44,7 @@ the gender-aware model, a loss in accuracy of 0.18 percentage points is necessar
 measured by demographic parity by 4.27 percentage points.
 
 ### Fairness and Accuracy Using The Gender Blind Model
-![Fairness and Accuracy Using The Gender Blind Model](img_1.png)
+![Fairness and Accuracy Using The Gender Blind Model](Fairness and Accuracy Blind Model.png)
 Notes: As expected, the accuracy is lower when dropping gender from the model. In contrast, the initial
 unfairness only amounts to 1.21\%. While initial unfairness is lower than in the previous model, demographic parity is
 not yet satisfied.  The plot for unfairness looks similar to the one using the gender-aware model, though there is one
