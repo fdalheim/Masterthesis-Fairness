@@ -32,7 +32,7 @@ protect minorities from algorithmic discrimination, the legislation should not b
 
 ## Results 
 ### Fairness and Accuracy Using The Gender Aware Model
-![Fairness and Accuracy Using The Gender Aware Model](img.png)
+![Fairness and Accuracy Using The Gender Aware Model](Results_gender_aware.png)
 Notes: The x value "Intervention" measures the difference in threshold values. For example, a value of
 0.010 means that the probability of men being employed has to exceed 0.5 in order for them to be classified as positive,
 while the necessary threshold value is lowered to 0.40 for female observations. By continuously lowering the threshold
@@ -44,7 +44,7 @@ the gender-aware model, a loss in accuracy of 0.18 percentage points is necessar
 measured by demographic parity by 4.27 percentage points.
 
 ### Fairness and Accuracy Using The Gender Blind Model
-![Fairness and Accuracy Using The Gender Blind Model](img1.png)
+![Fairness and Accuracy Using The Gender Blind Model](Results_gender_blind.png)
 Notes: As expected, the accuracy is lower when dropping gender from the model. In contrast, the initial
 unfairness only amounts to 1.21\%. While initial unfairness is lower than in the previous model, demographic parity is
 not yet satisfied.  The plot for unfairness looks similar to the one using the gender-aware model, though there is one
@@ -57,14 +57,7 @@ percentage points is necessary in order to reduce unfairness as measured by demo
 points.
 
 ### Overall Comparison Between Gender Aware and Blind Model
-|                               | Gender Aware Model | Gender Blind Model |
-|-------------------------------|--------------------|--------------------|
-| Initial Accuracy              | 0.7616             | 0.7593             |
-| Initial Unfairness            | 0.0427             | 0.0121             |
-| Necessary Intervention        | 0.0596             | 0.0214             |
-| Unfairness after Intervention | -0.0004            | -0.0004            |
-| Accuracy after Intervention   | 0.7598             | 0.7588             |
-| Loss in Accuracy              | 0.0018             | 0.0005             |
+![Comparison](Summary_slide.png)
 
 ### Implications
  From an accuracy maximizing perspective, it is best to include gender in the model. From a fairness perspective, gender
