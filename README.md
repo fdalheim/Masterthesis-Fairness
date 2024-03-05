@@ -35,7 +35,7 @@ protect minorities from algorithmic discrimination, the legislation should not b
 ![Fairness and Accuracy Using The Gender Aware Model](Results_gender_aware.png)
 Notes: The x value "Intervention" measures the difference in threshold values. For example, a value of
 0.010 means that the probability of men being employed has to exceed 0.5 in order for them to be classified as positive,
-while the necessary threshold value is lowered to 0.40 for female observations. By continuously lowering the threshold
+while the necessary threshold value is lowered to 0.49 for female observations. By continuously lowering the threshold
 of the disadvantaged group, it is possible to find gender-specific threshold values, where the share of being classified
 as employed is equal for both men and women. As can be seen on the right part of the figure, the fairness is roughly
 increasing linearly with bigger intervention levels. Conversely, the accuracy levels remain roughly constant for
